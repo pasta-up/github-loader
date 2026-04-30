@@ -104,16 +104,21 @@ else
         echo "Repo detected: $OWNER/$REPO"
 
         read -p "Read-only deploy key? (y/n): " readonly
-        [[ "$readonly" == "y" ]] && RO=true || RO=false
+        if [[ "$readonly" == "y" ]]; then
+          RO="true"
+        else
+          RO="false"
+        fi
 
         gh api "repos/$OWNER/$REPO/keys" \
-            --method POST \
-            -f title="$(hostname)-deploy-key" \
-            -f key="$PUBKEY_CONTENT" \
-            -F read_only=$RO
+          --method POST \
+          -H "Accept: application/vnd.github+json" \
+          -f title="$(hostname)-deploy-key" \
+          -f key="$PUBKEY_CONTENT" \
+          -f read_only="$RO"
 
         echo "Done: deploy key added."
-    else
+          else
         echo "Invalid input (must be repo URL or 'account')"
         exit 1
     fi
