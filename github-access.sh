@@ -34,7 +34,7 @@ fi
 # --
 if [ -n "$KEY_PATH" ]; then
     echo "Using key: $KEY_PATH"
-    read -p "Do you want to replace it? (y/n): " replace
+    read -p "Do you want to replace it? (y/n): " replace < /dev/tty
 
     if [[ "$replace" == "y" ]]; then
         rm -f "$KEY_PATH" "${KEY_PATH}.pub"
@@ -46,10 +46,10 @@ if [ -z "$KEY_PATH" ]; then
     default_email="${USER}@${HOSTNAME}"
 
     echo "[3/6] Creating new SSH key..."
-    read -p "Enter email for SSH key [${default_email}]: " email
+    read -p "Enter email for SSH key [${default_email}]: " email < /dev/tty
     email="${email:-$default_email}"
 
-    read -p "Preferred key type? (ed25519/rsa) [default: ed25519]: " keytype
+    read -p "Preferred key type? (ed25519/rsa) [default: ed25519]: " keytype < /dev/tty
     keytype=${keytype:-ed25519}
 
     if [[ "$keytype" == "rsa" ]]; then
@@ -78,7 +78,7 @@ fi
 echo "[5/6] Target selection:"
 echo "  - Repo: https://github.com/org/repo"
 echo "  - Account: account"
-read -p "Enter target: " target
+read -p "Enter target: " target < /dev/tty
 
 # --
 # actions
@@ -87,23 +87,22 @@ echo "[6/6] Processing..."
 PUBKEY_CONTENT=$(cat "$PUBKEY")
 
 if [[ "$target" == "account" ]]; then
-    echo "Adding SSH key to GitHub account..."
-
     gh api user/keys \
-        --method POST \
-        -f title="$(hostname)-$(date +%Y%m%d-%H%M%S)" \
-        -f key="$PUBKEY_CONTENT"
+    --method POST \
+    -H "Accept: application/vnd.github+json" \
+    -f title="$(hostname)-$(date +%Y%m%d-%H%M%S)" \
+    -f key="$PUBKEY_CONTENT"
 
     echo "Done: added to account."
 
 else
-    if [[ "$target" =~ github\.com[:/]+([^/]+)/([^/.]+) ]]; then
+    if [[ "$target" =~ github\.com[:/]+([^/]+)/([^/]+)(\.git)?/?$ ]]; then
         OWNER="${BASH_REMATCH[1]}"
         REPO="${BASH_REMATCH[2]}"
 
         echo "Repo detected: $OWNER/$REPO"
 
-        read -p "Read-only deploy key? (y/n): " readonly
+        read -p "Read-only deploy key? (y/n): " readonly < /dev/tty
         if [[ "$readonly" == "y" ]]; then
           RO="true"
         else
